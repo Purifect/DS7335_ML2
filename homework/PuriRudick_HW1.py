@@ -2,7 +2,7 @@
 # @Author: Puri Rudick
 # @Date:   2022-01-15 16:26:56
 # @Last Modified by:   Your name
-# @Last Modified time: 2022-01-18 17:05:58
+# @Last Modified time: 2022-02-06 18:48:24
 
 
 # Fill in an explanation of each function and an example of how to use it below.
@@ -17,7 +17,7 @@ mylist.append('apple')
 print(mylist)
 
 # extend() – Adds the specified list elements (or any iterable) to the end of the current list.
-col = ('red', 'yellow', 'green')       # create 2nd demo list
+col = ['red', 'yellow', 'green']       # create 2nd demo list
 mylist.extend(col)
 print(mylist)
 
@@ -225,7 +225,7 @@ print(string.count('o'))
 
 # encode() – Returns an encoded version of the given string.  By default, the encode() method does not require any parameters.
 # It returns an utf-8 encoded version of the string.  In case of failure, it raises a UnicodeDecodeError exception.
-string3 = 'pythön! is awesome!'
+string3 = 'pythön! is awesome!`'
 print(string3.encode())
 
 # find() – Returns the index of first occurrence of the substring (if found). If not found, it returns -1.
