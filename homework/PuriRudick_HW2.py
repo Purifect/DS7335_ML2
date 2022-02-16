@@ -102,11 +102,14 @@ def run(a_clf, data, clf_hyper):
     acc += accuracy_score(L[test_index], pred)
 
     # ROC and AUC Value
-    prediction = clf.fit(M[train_index],L[train_index]).predict_proba(M[test_index])
-    fpr, tpr, t = roc_curve(L[test_index], prediction[:, 1])
-    tprs.append(interp(mean_fpr, fpr, tpr))
-    roc_auc = auc(fpr, tpr)
-    aucs.append(roc_auc)
+    # prediction = clf.fit(M[train_index],L[train_index]).predict_proba(M[test_index])
+    # fpr, tpr, t = roc_curve(L[test_index], prediction[:, 1])
+    # auc = roc_auc_score(L[test_index], prediction[:, 1])
+    # print(auc)
+    
+    # tprs.append(interp(mean_fpr, fpr, tpr))
+    # roc_auc = auc(fpr, tpr)
+    # aucs.append(roc_auc)
 
   acc_avg = acc / n_folds
   model_hyper_param = ret[0]
