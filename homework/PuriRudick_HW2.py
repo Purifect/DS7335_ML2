@@ -2,9 +2,10 @@
 # @Author: Puri Rudick
 # @Date:   2022-01-28 18:48:16
 # @Last Modified by:   Your name
-# @Last Modified time: 2022-02-16 01:14:43
+# @Last Modified time: 2022-02-16 17:38:24
 
 from operator import le
+from tkinter import font
 import numpy as np
 from sklearn.metrics import accuracy_score # other metrics too pls!
 from sklearn.ensemble import RandomForestClassifier # more!
@@ -14,7 +15,6 @@ from sklearn.model_selection import KFold
 from sklearn import datasets
 from sklearn.model_selection import ParameterGrid
 import matplotlib.pyplot as plt
-import pandas as pd
 
 # adapt this code below to run your analysis
 # 1. Write a function to take a list or dictionary of clfs and hypers(i.e. use logistic regression), each with 3 different sets of hyper parameters for each
@@ -49,10 +49,11 @@ import pandas as pd
 # results = run(RandomForestClassifier, data, clf_hyper={})
 #LongLongLiveGridS#LongLon#LLongLiveGridSearch!gLiveGridSearch!
 
-
 # *************************************** #
 # -----------  Modified Code  ----------- #
 # *************************************** #
+
+# Write a list to take in models' parametes with 3 different sets of hyper parameters for each.
 models = {
   'DecisionTree' : {
     'model_name' : DecisionTreeClassifier(),
@@ -80,12 +81,15 @@ models = {
   }
 }
 
+# Import builtin wind dataset, which classified wine into 3 classes
 wine_df, wine_class = datasets.load_wine(return_X_y=True)
+
 n_folds = 5
 data = (wine_df, wine_class, n_folds)
 scores = []
 
 
+# Modified code to get accuracy value for each parameter grid search
 def run(a_clf, data, clf_hyper):
   M, L, n_folds = data # unpack data container
   kf = KFold(n_splits=n_folds) # Establish the cross validation
@@ -104,6 +108,7 @@ def run(a_clf, data, clf_hyper):
   model_hyper_param = ret[0]
   model_hyper_param['accuracy'] = acc_avg
   return model_hyper_param
+
 
 # Loop to get accuracy for each parameter of each model
 for model_parameters in models:
@@ -125,6 +130,7 @@ for model_parameters in models:
       hyper_param.append(a)
       accuracy.append(b)
 
+  # get model parameters and accuracy for each model 
   if model_parameters in 'DecisionTree':
     DecisionTree_param = hyper_param
     DecisionTree_acc = accuracy
@@ -138,16 +144,18 @@ for model_parameters in models:
 # Create histogram plot function to look for parameters that give highest accuracy
 def hist(clf, param, acc):
   xs = np.arange(len(param)) 
-  plt.bar(xs, acc,  align='center')
-  plt.xticks(xs, param) #Replace default x-ticks with xs, then replace xs with labels
-  plt.yticks(acc)
-  plt.xticks(rotation='vertical')
+  fig = plt.figure(figsize=(10,4))
+  plt.barh(xs, acc, align='center')
+  plt.yticks(xs, param, rotation='horizontal', fontsize = 8)
   plt.title(clf)
+  plt.xlabel('Model Accuracy', fontsize=10)
+  plt.ylabel('Model Parameters', fontsize=10)
+  plt.tight_layout()
   plt.show()
 
 # Plot histogram for the 3 models
-hist('DecisionTree', DecisionTree_param, DecisionTree_acc)
-hist('kNN', kNN_param, kNN_acc)
-hist('RandomForest', RandomForest_param, RandomForest_acc)
+hist('Decision Tree Classification Models Comaparison', DecisionTree_param, DecisionTree_acc)
+hist('kNN Classification Models Comaparison', kNN_param, kNN_acc)
+hist('Random Forest Classification Models Comaparison', RandomForest_param, RandomForest_acc)
 
 
