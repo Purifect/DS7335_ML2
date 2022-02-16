@@ -12,6 +12,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import KFold
 from sklearn import datasets
 from sklearn.model_selection import ParameterGrid
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
 
 # adapt this code below to run your analysis
 # 1. Write a function to take a list or dictionary of clfs and hypers(i.e. use logistic regression), each with 3 different sets of hyper parameters for each
@@ -22,9 +24,6 @@ from sklearn.model_selection import ParameterGrid
 # 6. Investigate grid search function
 
 
-# ************************************** #
-# -----------  Example Code  ----------- #
-# ************************************** #
 # M = np.array([[1,2],[3,4],[4,5],[4,5],[4,5],[4,5],[4,5],[4,5]])
 # L = np.ones(M.shape[0])
 # n_folds = 5
@@ -58,25 +57,25 @@ models = {
     'model_name' : DecisionTreeClassifier(),
     'param' : {
       'splitter': ['best', 'random'],
-      'criterion' : ['gini','entropy'],
-      'min_samples_leaf': [5,10],
+      'criterion' : ['gini'], #,'entropy'],
+      'min_samples_leaf': [5, 10] #,10]
     }
   },
   'kNN' : {
     'model_name' : KNeighborsClassifier(),
     'param' : {
-      'n_neighbors': [3,5,7,9],
-      'weights': ['uniform', 'distance'],
-      'algorithm': ['auto','ball_tree']
+      'n_neighbors': [3], # ,5,7,9],
+      'weights': ['uniform'], #, 'distance'],
+      'algorithm': ['auto'] #,'ball_tree']
     }
   },
   'RandomForest' : {
     'model_name' : RandomForestClassifier(),
     'param' : {
-      'max_depth': [5, 8, 15, 25, 30, 'None'],
-      'n_estimators': [50, 150, 300, 500, 800],
-      'min_samples_split': [2, 5, 10, 15, 100],
-      'min_samples_leaf': [1, 2, 5, 10]
+      'max_depth': [5], #, 15, 30, 'None'],
+      'n_estimators': [50], #, 150, 200],
+      'min_samples_split': [2], #, 5, 10],
+      'min_samples_leaf': [1] #, 5, 10]
     }
   }
 }
@@ -86,21 +85,33 @@ n_folds = 5
 data = (wine_df, wine_class, n_folds)
 scores = []
 
+
 def run(a_clf, data, clf_hyper):
   M, L, n_folds = data # unpack data container
   kf = KFold(n_splits=n_folds) # Establish the cross validation
-  ret = {} # classic explication of results
+  ret = {}
+  acc = 0
 
   for ids, (train_index, test_index) in enumerate(kf.split(M, L)):
     clf = a_clf
     clf.set_params(**clf_hyper) # unpack parameters into clf is they exist
     clf.fit(M[train_index], L[train_index])
     pred = clf.predict(M[test_index])
-    ret[ids]= {'clf': clf,
-               'parameters': clf_hyper,
-               'accuracy': accuracy_score(L[test_index], pred)}
-  return ret
+    ret[ids]= {'clf': a_clf,
+               'parameters': clf_hyper}
+    acc += accuracy_score(L[test_index], pred)
 
+    # ROC and AUC Value
+    prediction = clf.fit(M[train_index],L[train_index]).predict_proba(M[test_index])
+    fpr, tpr, t = roc_curve(L[test_index], prediction[:, 1])
+    tprs.append(interp(mean_fpr, fpr, tpr))
+    roc_auc = auc(fpr, tpr)
+    aucs.append(roc_auc)
+
+  acc_avg = acc / n_folds
+  model_hyper_param = ret[0]
+  model_hyper_param['accuracy'] = acc_avg
+  return model_hyper_param
 
 
 for model_parameters in models:
@@ -108,15 +119,16 @@ for model_parameters in models:
   model = models[model_parameters]['model_name']
 
   # build parameter grid
-  sets_of_parameters = list(ParameterGrid(parameters)) # will need to be defined
-  # print(sets_of_parameters)
+  sets_of_parameters = list(ParameterGrid(parameters))
+
+  clf_summary = []
 
   for parameter_set in sets_of_parameters:
-    m = run(model, data, parameter_set)
-    # model.set_params(**parameter_set)
-    # metric = KFold(model, parameter_set, wine_df, wine_class)
-    # scores.append(metric)
-    print(m)
+    hyper_param = run(model, data, parameter_set)
+    clf_summary.append(hyper_param)
+  
+  print(clf_summary)
+
 
     
 
