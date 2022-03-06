@@ -2,7 +2,7 @@
 # @Author: Puri Rudick
 # @Date:   2022-03-02 20:49:04
 # @Last Modified by:   Your name
-# @Last Modified time: 2022-03-05 22:29:11
+# @Last Modified time: 2022-03-05 23:44:23
 
 
 # Decision making with Matrices
@@ -278,30 +278,148 @@ M_usr_x_rest_rank[np.arange(m)[:,None], sidx] = np.arange(n)	# Rank 9 is the hig
 restaurant_total_rank_score = M_usr_x_rest_rank.sum(axis=0)
 
 s = 0
-print('Restaurant ranking score (from highest to lowest):')
+print('Restaurant ranking score (higher raking score means better in ranking):')
 for i in reversed(np.argsort(restaurant_total_rank_score)):
     s += 1
     print('#%d  %s - Total Rank Score: %s' % (s, restaurants_list[i], '{0:.2f}'.format(restaurant_total_rank_score[i])))
 
 
-# %%
+#%%
 # Why is there a difference between the two?  What problem arrives?  What does it represent in the real world?
-'''
+print('''
 The different between the two happens because the first one uses raw score with weights from the survey. 
 While the second one is only based on the total of ranking number.
-In reality, this represents tthe important of features' weight.  Which most of the time are not equaly important.
-'''
+In reality, this represents the important of features' weight.  When the dimension of the weights are reduced, the result might be different.
+''')
+
 
 # How should you preprocess your data to remove this problem. 
+print('''
+I would prefer not to use the ranking data because I think it does not represent the data very well.
+''')
 
+
+#%%
 # Find  user profiles that are problematic, explain why?
+variance_dist=list(np.var(M_usr_x_rest,axis=0))
 
-# Think of two metrics to compute the disatistifaction with the group.  
+people_variance=dict(zip(people_list, variance_dist))
+print(people_variance)
+print('''
+According to the score variance of each user, Lee has the lowest variance at 20.1 compares to other users that have over 32. 
+The way that these Lee input his scores might cause a problem here for us.
+''')
 
+
+#%%
+# Think of two metrics to compute the dissatistifaction with the group.  
+print('''
+
+''')
+
+print(
+    "Dissatisfaction within the group should be able to be ascertained by looking at the differences between the highest and lowest scoring restaurants. To quantify that dissatisfaction, we'll look at standard deviation and interquartile range."
+)
+
+# Calculate std and iqr
+dissat_std = np.std(M_usr_x_rest, axis=1)
+q75, q25 = np.percentile(M_usr_x_rest, [75, 25], axis=1)
+dissat_iqr = q75 - q25
+
+# Find which restaurant(s) is/are associated with greatest std and iqr
+restaurant_names = list(restaurants.keys())
+restaurant_std = dict(zip(restaurant_names, dissat_std.tolist()))
+restaurant_iqr = dict(zip(restaurant_names, dissat_iqr.tolist()))
+
+print("\nRestaurant Standard Deviations:")
+print(restaurant_std)
+print("\nRestaurant IQRs:")
+print(restaurant_iqr)
+
+
+print(
+    "\n%s is the restaurant with the greatest standard deviation of %s"
+    % (max(restaurant_std, key=restaurant_std.get), max(restaurant_std.values()))
+)
+
+print(
+    "\n%s is the restaurant with the greatest iterquartile range of %s"
+    % (max(restaurant_iqr, key=restaurant_iqr.get), max(restaurant_iqr.values()))
+)
+
+
+#%%
 # Should you split in two groups today? 
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 
+# Use PCA to reduce all features to only 2 components
+pca = PCA(n_components=2)
+M_people_pca = pca.fit_transform(M_people)
+
+per_var = np.round(pca.explained_variance_ratio_ * 100, decimals=1)
+
+# Print explained variance values
+print('''Using PCA to reduce all features to 2 components.
+The values of PCA1 and PCA2 are: %s
+Which means that the first two principal components can explain %s percent of the variance.''' % (per_var, '{0:.2f}'.format(sum(per_var))))
+
+# Run k-means clustering
+kmeans = KMeans(n_clusters=2).fit(M_people_pca)
+kmeans_group = kmeans.predict(M_people_pca)
+kmeans_centers = kmeans.cluster_centers_
+kmeans_labels = kmeans.labels_
+
+plt.scatter(
+    M_people_pca[:, 0], M_people_pca[:, 1], c=kmeans_group, s=50, cmap="viridis"
+)
+plt.scatter(kmeans_centers[:, 0], kmeans_centers[:, 1], c="blue", s=200, alpha=0.5)
+plt.xlabel('PCA1')
+plt.ylabel('PCA2')
+plt.show()
+
+print('''The photo above show k-means clustering between PCA1 and PCA2 with the two groups center.
+From the plot, we can see that the group should be splitted into two.
+''')
+
+
+#%%
 # Ok. Now you just found out the boss is paying for the meal. How should you adjust? Now what is the best restaurant?
+print('''If the boss is paying, the cost feature should no longer be in our consideration.
+Let's rerun the data without it!\n\n''')
 
+people_nonCost = people
+
+# Zero out values for cost
+for key, value in people_nonCost.items():
+    value['cost'] = 0
+
+M_people_nonCost = []
+
+for i in people:
+	M = []
+	for j in people[i]:
+		M.append(people[i][j])
+	M_people_nonCost.append(M)
+
+M_people_nonCost = np.array(M_people_nonCost)
+
+M_usr_x_rest_people_nonCost=np.dot(M_people_nonCost,M_restaurants.T)
+
+# Sum all columns in M_usr_x_rest to get the optimal restaurant for all users.
+restaurant_total_score_nonCost = M_usr_x_rest_people_nonCost.sum(axis=0) 
+
+s = 0
+print('If BOSS PAYS, restaurant ranking over all score (from highest to lowest):')
+for i in reversed(np.argsort(restaurant_total_score_nonCost)):
+    s += 1
+    print('#%d  %s - Total Score: %s' % (s, restaurants_list[i], '{0:.2f}'.format(restaurant_total_score_nonCost[i])))
+
+
+#%%
 # Tomorrow you visit another team. You have the same restaurants and they told you their optimal ordering for restaurants.  Can you find their weight matrix? 
-
-# %%
+print('''No, we cannot calculate the weight matrix with the optimal ordering for the restaurants alone.
+Different users give different weight to each features.  To be able to calculate the weight matrix, we do need a raw data from users.
+Just like what we discussed on the question of comparing score versus rank methods.
+Using only optimal ordering for restaurant might give a totally different order than using scoring weight.
+''')
