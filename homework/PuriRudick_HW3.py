@@ -2,7 +2,7 @@
 # @Author: Puri Rudick
 # @Date:   2022-03-02 20:49:04
 # @Last Modified by:   Your name
-# @Last Modified time: 2022-03-05 23:44:23
+# @Last Modified time: 2022-03-06 14:44:55
 
 
 # Decision making with Matrices
@@ -115,12 +115,12 @@ for i in people:
 	survey_list.append(s)
 
 M_people = np.array(M_people)
-print(M_people)
-print(people_list)
+print('M_people matrix:\n', M_people)
+print('Row lables with people names:', people_list)
 
 survey_list = set(tuple(i) for i in survey_list)
 survey_list =[item for t in survey_list for item in t]
-print(survey_list)
+print('Column lables with survay features:', survey_list)
 
 # Print the matrix as dataframe with column and row namesß
 M_people_df = pd.DataFrame(M_people, columns=survey_list, index=people_list)
@@ -219,12 +219,12 @@ for i in restaurants:
 	rating_list.append(s)
 
 M_restaurants = np.array(M_restaurants)
-print(M_restaurants)
-print(restaurants_list)
+print('\nM_restaurants matrix is:\n', M_restaurants)
+print('Row labels with restaurant names: ', restaurants_list)
 
 rating_list = set(tuple(i) for i in rating_list)
 rating_list =[item for t in rating_list for item in t]
-print(rating_list)
+print('Column labels with rating score features: ', rating_list)
 
 # Print the matrix as dataframe with column and row namesß
 M_restaurants_df = pd.DataFrame(M_restaurants, columns=rating_list, index=restaurants_list)
@@ -239,13 +239,13 @@ M_restaurants_df
 casey_pick = np.dot(M_people[people_list.index('Casey')], M_restaurants.T)
 casey_first_pick = np.argmax(casey_pick)
 
-print(f'Casey''s top restauratn is ', restaurants_list[casey_first_pick])
+print(f'\nThe person I choose is Casey.  His top restaurant is', restaurants_list[casey_first_pick])
 
 
 #%%
 # Next, compute a new matrix (M_usr_x_rest  i.e. an user by restaurant) from all people.  What does the a_ij matrix represent?
 M_usr_x_rest=np.dot(M_people,M_restaurants.T)
-print(M_usr_x_rest)
+print('\nM_urs_x_rest is:\n', M_usr_x_rest)
 
 # What does the a_ij matrix represent?
 print('Row labels are people: ', people_list)
@@ -257,7 +257,7 @@ print('Column labels are restaurant: ', restaurants_list)
 restaurant_total_score = M_usr_x_rest.sum(axis=0) 
 
 s = 0
-print('Restaurant over all score (from highest to lowest):')
+print('\nRestaurant over all score (from highest to lowest):')
 for i in reversed(np.argsort(restaurant_total_score)):
     s += 1
     print('#%d  %s - Total Score: %s' % (s, restaurants_list[i], '{0:.2f}'.format(restaurant_total_score[i])))
@@ -278,7 +278,7 @@ M_usr_x_rest_rank[np.arange(m)[:,None], sidx] = np.arange(n)	# Rank 9 is the hig
 restaurant_total_rank_score = M_usr_x_rest_rank.sum(axis=0)
 
 s = 0
-print('Restaurant ranking score (higher raking score means better in ranking):')
+print('\nRestaurant ranking score (higher raking score means better in ranking):')
 for i in reversed(np.argsort(restaurant_total_rank_score)):
     s += 1
     print('#%d  %s - Total Rank Score: %s' % (s, restaurants_list[i], '{0:.2f}'.format(restaurant_total_rank_score[i])))
@@ -301,9 +301,9 @@ I would prefer not to use the ranking data because I think it does not represent
 
 #%%
 # Find  user profiles that are problematic, explain why?
-variance_dist=list(np.var(M_usr_x_rest,axis=0))
+variance_dist = list(np.var(M_usr_x_rest,axis=0))
 
-people_variance=dict(zip(people_list, variance_dist))
+people_variance = dict(zip(people_list, variance_dist))
 print(people_variance)
 print('''
 According to the score variance of each user, Lee has the lowest variance at 20.1 compares to other users that have over 32. 
@@ -313,38 +313,21 @@ The way that these Lee input his scores might cause a problem here for us.
 
 #%%
 # Think of two metrics to compute the dissatistifaction with the group.  
-print('''
-
+print('''Two matrices that can help compute the dissatistifaction with the group are restaurant rating score variance and standard deviation. 
 ''')
 
-print(
-    "Dissatisfaction within the group should be able to be ascertained by looking at the differences between the highest and lowest scoring restaurants. To quantify that dissatisfaction, we'll look at standard deviation and interquartile range."
+restaurants_variance_dist = list(np.var(M_usr_x_rest,axis=1))
+restaurants_variance = dict(zip(restaurants_list, restaurants_variance_dist))
+print('Restaurants rating score variance: ', restaurants_variance)
+print('The restaurant with the greatest variance is %s, with the varianceof %s'
+% (max(restaurants_variance, key=restaurants_variance.get), '{0:2f}'.format(max(restaurants_variance.values())))
 )
 
-# Calculate std and iqr
-dissat_std = np.std(M_usr_x_rest, axis=1)
-q75, q25 = np.percentile(M_usr_x_rest, [75, 25], axis=1)
-dissat_iqr = q75 - q25
-
-# Find which restaurant(s) is/are associated with greatest std and iqr
-restaurant_names = list(restaurants.keys())
-restaurant_std = dict(zip(restaurant_names, dissat_std.tolist()))
-restaurant_iqr = dict(zip(restaurant_names, dissat_iqr.tolist()))
-
-print("\nRestaurant Standard Deviations:")
-print(restaurant_std)
-print("\nRestaurant IQRs:")
-print(restaurant_iqr)
-
-
-print(
-    "\n%s is the restaurant with the greatest standard deviation of %s"
-    % (max(restaurant_std, key=restaurant_std.get), max(restaurant_std.values()))
-)
-
-print(
-    "\n%s is the restaurant with the greatest iterquartile range of %s"
-    % (max(restaurant_iqr, key=restaurant_iqr.get), max(restaurant_iqr.values()))
+restaurants_std_dist = list(np.std(M_usr_x_rest,axis=1))
+restaurants_std = dict(zip(restaurants_list, restaurants_variance_dist))
+print('\nRestaurants rating score standard deviation: ', restaurants_std)
+print('The restaurant with the greatest standard deviation is %s, with the standard deviation of %s'
+% (max(restaurants_std, key=restaurants_std.get), '{0:2f}'.format(max(restaurants_std.values())))
 )
 
 
@@ -386,7 +369,7 @@ From the plot, we can see that the group should be splitted into two.
 #%%
 # Ok. Now you just found out the boss is paying for the meal. How should you adjust? Now what is the best restaurant?
 print('''If the boss is paying, the cost feature should no longer be in our consideration.
-Let's rerun the data without it!\n\n''')
+Let's rerun the data without it!\n''')
 
 people_nonCost = people
 
@@ -396,9 +379,9 @@ for key, value in people_nonCost.items():
 
 M_people_nonCost = []
 
-for i in people:
+for i in people_nonCost:
 	M = []
-	for j in people[i]:
+	for j in people_nonCost[i]:
 		M.append(people[i][j])
 	M_people_nonCost.append(M)
 
@@ -418,7 +401,7 @@ for i in reversed(np.argsort(restaurant_total_score_nonCost)):
 
 #%%
 # Tomorrow you visit another team. You have the same restaurants and they told you their optimal ordering for restaurants.  Can you find their weight matrix? 
-print('''No, we cannot calculate the weight matrix with the optimal ordering for the restaurants alone.
+print('''\nNo, we cannot calculate the weight matrix with the optimal ordering for the restaurants alone.
 Different users give different weight to each features.  To be able to calculate the weight matrix, we do need a raw data from users.
 Just like what we discussed on the question of comparing score versus rank methods.
 Using only optimal ordering for restaurant might give a totally different order than using scoring weight.
